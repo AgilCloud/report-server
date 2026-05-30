@@ -198,6 +198,8 @@ Para restaurar volumes, crie ou limpe o volume de destino primeiro e depois extr
 
 ## Docker Hub, Secrets e Tags
 
+Imagem no Docker Hub: [eaojunior/report-server](https://hub.docker.com/r/eaojunior/report-server).
+
 Publique imagens somente após validação de checksum e CI limpo. Tags recomendadas:
 
 - `6.1.2-6123`
