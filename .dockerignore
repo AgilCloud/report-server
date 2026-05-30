@@ -1,0 +1,54 @@
+# Git and local metadata
+.git
+.github
+.gitignore
+.DS_Store
+Thumbs.db
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+*.keystore
+*.truststore
+*password*
+*secret*
+docker/config/*.txt
+
+# Dependency and build caches
+node_modules
+.npm
+.pnpm-store
+.yarn
+.gradle
+.m2
+target
+build
+dist
+out
+tmp
+temp
+.cache
+
+# Runtime data, logs, and backups
+data
+volumes
+backups
+*.log
+*.pid
+*.sql
+*.dump
+*.tar
+*.tar.gz
+*.zip
+
+# Editor and tool state
+.idea
+.vscode
+*.swp
+*.swo

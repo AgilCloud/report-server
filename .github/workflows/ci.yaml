@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: report-server-ci
+  RS_SHA256: 9c2518b737cf614fc1fb420dd34402b8c8628a87912f5442c8f7509da7113a63
+
+jobs:
+  docker:
+    name: Docker validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate Compose config
+        run: docker compose config
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: docker/Dockerfile
+
+      - name: Build image without push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          build-args: |
+            RS_SHA256=${{ env.RS_SHA256 }}
+
+      - name: Smoke test with Compose
+        run: |
+          set -euo pipefail
+
+          docker compose up --build -d
+
+          for attempt in {1..60}; do
+            if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
+              docker compose ps
+              exit 0
+            fi
+
+            docker compose ps
+            sleep 10
+          done
+
+          docker compose logs --no-color
+          exit 1
+
+      - name: Cleanup Compose
+        if: always()
+        run: docker compose down --volumes --remove-orphans

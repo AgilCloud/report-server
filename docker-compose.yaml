@@ -1,0 +1,76 @@
+services:
+  reportserver:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        RS_VERSION: ${RS_VERSION:-6.1.2}
+        RS_BUILD: ${RS_BUILD:-6123}
+        RS_ZIP: ${RS_ZIP:-RS6.1.2-6123-2026-04-16-14-17-01-reportserver-ce.zip}
+        RS_SHA256: ${RS_SHA256:-9c2518b737cf614fc1fb420dd34402b8c8628a87912f5442c8f7509da7113a63}
+    ports:
+      - "${REPORTSERVER_HTTP_PORT:-8080}:8080"
+    environment:
+      RS_DB_TYPE: postgresql
+      RS_DB_HOST: db
+      RS_DB_PORT: "5432"
+      RS_DB_NAME: reportserver
+      RS_DB_USER: reportserver
+      RS_DB_PASSWORD_FILE: /run/secrets/reportserver_db_password
+      RS_BASE_URL: ${RS_BASE_URL:-http://localhost:8080}
+      RS_CONFIG_DIR: /opt/reportserver/config
+      RS_DB_INIT_SCHEMA: ${RS_DB_INIT_SCHEMA:-true}
+      RS_DB_CONNECT_TIMEOUT: ${RS_DB_CONNECT_TIMEOUT:-120}
+      JAVA_XMS: ${JAVA_XMS:-512m}
+      JAVA_XMX: ${JAVA_XMX:-1536m}
+      TZ: ${TZ:-America/Bahia}
+    volumes:
+      - reportserver_config:/opt/reportserver/config
+      - reportserver_data:/var/lib/reportserver
+    secrets:
+      - reportserver_db_password
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - reportserver_private
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: reportserver
+      POSTGRES_USER: reportserver
+      POSTGRES_PASSWORD_FILE: /run/secrets/reportserver_db_password
+      TZ: ${TZ:-America/Bahia}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    secrets:
+      - reportserver_db_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reportserver -d reportserver"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - reportserver_private
+
+secrets:
+  reportserver_db_password:
+    environment: RS_DB_PASSWORD
+
+volumes:
+  reportserver_config:
+  reportserver_data:
+  postgres_data:
+
+networks:
+  reportserver_private:
