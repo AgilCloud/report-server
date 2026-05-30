@@ -16,17 +16,23 @@ env:
   RS_SHA256: ${{ vars.RS_SHA256 || '9c2518b737cf614fc1fb420dd34402b8c8628a87912f5442c8f7509da7113a63' }}
   RS_VERSION: 6.1.2
   RS_BUILD: 6123
+  PLATFORMS: linux/amd64,linux/arm64,linux/ppc64le,linux/riscv64,linux/s390x
 
 jobs:
   publish:
     name: Publish Docker image
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch))
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -57,8 +63,18 @@ jobs:
         with:
           context: .
           file: docker/Dockerfile
+          platforms: ${{ env.PLATFORMS }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             RS_SHA256=${{ env.RS_SHA256 }}
+
+      - name: Update Docker Hub overview
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.DOCKERHUB_REPOSITORY }}
+          readme-filepath: README.md
+          short-description: ReportServer CE 6.1.2 Docker image with Tomcat 9, PostgreSQL, and Compose support.
