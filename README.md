@@ -95,6 +95,38 @@ docker build \
 
 O build deve falhar se o arquivo baixado não corresponder a `RS_SHA256`.
 
+## Comandos com Make
+
+O repositório inclui um `Makefile` com os comandos mais comuns. Para criar o `.env` a partir de `.env.example` e gerar uma senha local para `RS_DB_PASSWORD`, use:
+
+```sh
+make env
+```
+
+Esse comando não sobrescreve um `.env` existente. Para recriar o arquivo e gerar uma nova senha:
+
+```sh
+make env-force
+```
+
+Outros alvos úteis:
+
+```sh
+make config
+make build
+make up
+make ps
+make logs-app
+make health
+make down
+```
+
+Para ver a lista completa:
+
+```sh
+make help
+```
+
 ## Execução com Compose
 
 Crie `.env`, configure os secrets e inicie a stack. O Compose passa o build arg `RS_SHA256` fixado, e o `.env` pode sobrescrevê-lo quando o arquivo upstream mudar.
@@ -166,6 +198,8 @@ Para restaurar volumes, crie ou limpe o volume de destino primeiro e depois extr
 
 ## Docker Hub, Secrets e Tags
 
+Imagem no Docker Hub: [eaojunior/report-server](https://hub.docker.com/r/eaojunior/report-server).
+
 Publique imagens somente após validação de checksum e CI limpo. Tags recomendadas:
 
 - `6.1.2-6123`
@@ -175,6 +209,16 @@ Publique imagens somente após validação de checksum e CI limpo. Tags recomend
 Nunca grave secrets em camadas da imagem, labels, build args ou descrições no Docker Hub. Build args não são mecanismo de secret. Use variáveis de ambiente em runtime, `*_FILE`, Compose secrets ou armazenamentos de secret nativos da plataforma.
 
 Ao publicar, inclua a versão do ReportServer CE, número do build, compatibilidade do runtime base, fonte do checksum e aviso AGPL nas release notes ou na documentação da imagem.
+
+O workflow de CD publica uma imagem multi-arch para as plataformas suportadas pela imagem base `tomcat:9.0-jdk21-temurin-noble`:
+
+- `linux/amd64`
+- `linux/arm64`
+- `linux/ppc64le`
+- `linux/riscv64`
+- `linux/s390x`
+
+O mesmo workflow também atualiza o overview do Docker Hub usando este `README.md` como descrição longa e o secret `DOCKERHUB_REPOSITORY` como repositório de destino.
 
 ## AGPL
 
