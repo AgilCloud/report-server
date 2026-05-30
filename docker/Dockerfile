@@ -1,4 +1,4 @@
-FROM tomcat:9.0-jdk21-temurin-noble
+FROM tomcat:9.0-jdk21-temurin-noble@sha256:a412e116748a261c8c192daa0f66ff9153c03727475d564319279a94483cf59a
 
 ARG RS_VERSION=6.1.2
 ARG RS_BUILD=6123

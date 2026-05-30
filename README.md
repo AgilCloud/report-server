@@ -1,5 +1,13 @@
 # Docker para ReportServer CE
 
+[![CI](https://github.com/AgilCloud/report-server/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/AgilCloud/report-server/actions/workflows/ci.yaml)
+[![CD](https://github.com/AgilCloud/report-server/actions/workflows/cd.yaml/badge.svg?branch=main)](https://github.com/AgilCloud/report-server/actions/workflows/cd.yaml)
+[![Docker pulls](https://img.shields.io/docker/pulls/eaojunior/report-server?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/eaojunior/report-server)
+[![Docker image version](https://img.shields.io/docker/v/eaojunior/report-server?sort=semver&logo=docker&label=Docker%20Hub)](https://hub.docker.com/r/eaojunior/report-server/tags)
+[![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue)](#agpl)
+[![Non-root runtime](https://img.shields.io/badge/runtime-non--root%20UID%2010001-success)](docker/Dockerfile)
+[![SBOM and provenance](https://img.shields.io/badge/SBOM%20%26%20provenance-enabled-success)](.github/workflows/cd.yaml)
+
 Empacotamento Docker/Compose para o ReportServer Community Edition 6.1.2 build 6123.
 
 Este repositório cria uma imagem local do ReportServer CE, executa a aplicação com Docker Compose e documenta o contrato operacional de configuração, persistência, secrets e obrigações da licença AGPL.
@@ -210,7 +218,7 @@ Nunca grave secrets em camadas da imagem, labels, build args ou descrições no 
 
 Ao publicar, inclua a versão do ReportServer CE, número do build, compatibilidade do runtime base, fonte do checksum e aviso AGPL nas release notes ou na documentação da imagem.
 
-O workflow de CD publica uma imagem multi-arch para as plataformas suportadas pela imagem base `tomcat:9.0-jdk21-temurin-noble`:
+O workflow de CD publica uma imagem multi-arch em builds paralelos por matrix para as plataformas suportadas pela imagem base `tomcat:9.0-jdk21-temurin-noble`:
 
 - `linux/amd64`
 - `linux/arm64`
@@ -218,7 +226,17 @@ O workflow de CD publica uma imagem multi-arch para as plataformas suportadas pe
 - `linux/riscv64`
 - `linux/s390x`
 
-O mesmo workflow também atualiza o overview do Docker Hub usando este `README.md` como descrição longa e o secret `DOCKERHUB_REPOSITORY` como repositório de destino.
+Cada build por arquitetura publica um digest com SBOM e provenance habilitados, e o job final cria o manifest list multi-arch com as tags públicas.
+
+O mesmo workflow tenta atualizar o overview do Docker Hub usando este `README.md` como descrição longa e o secret `DOCKERHUB_REPOSITORY` como repositório de destino. Esse passo é não bloqueante: se o Docker Hub retornar `Forbidden`, revise se `DOCKERHUB_USERNAME` e `DOCKERHUB_TOKEN` pertencem a uma conta com permissão de escrita/administração no namespace do repositório `eaojunior/report-server`.
+
+### Observações Sobre Docker Scout
+
+A imagem busca atender aos checks aplicáveis do Docker Scout com base oficial suportada, digest fixado da imagem base, execução sem root, SBOM e provenance. Ainda assim, alguns pontos podem exigir avaliação manual:
+
+- Vulnerabilidades críticas/altas corrigíveis dependem da imagem base e dos pacotes do Ubuntu disponíveis no momento do build.
+- O digest fixado da imagem base deve ser atualizado periodicamente para acompanhar novos builds de `tomcat:9.0-jdk21-temurin-noble`.
+- O ReportServer CE é AGPLv3 por definição; portanto o check "não conter software AGPL v3" não é aplicável a esta imagem Community Edition sem trocar o produto-alvo.
 
 ## AGPL
 
